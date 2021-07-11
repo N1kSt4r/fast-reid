@@ -1,5 +1,8 @@
 
 logs
+datasets
+outputs
+model.h5
 
 # compilation and distribution
 __pycache__

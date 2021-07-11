@@ -49,6 +49,7 @@ class CfgNode(_CfgNode):
         Returns:
             (dict): the loaded yaml
         """
+        print('load', filename)
         with PathManager.open(filename, "r") as f:
             try:
                 cfg = yaml.safe_load(f)
@@ -105,6 +106,7 @@ class CfgNode(_CfgNode):
             allow_unsafe: whether to allow loading the config file with
                 `yaml.unsafe_load`.
         """
+        print('merge from file', cfg_filename)
         loaded_cfg = CfgNode.load_yaml_with_base(
             cfg_filename, allow_unsafe=allow_unsafe
         )
@@ -113,6 +115,7 @@ class CfgNode(_CfgNode):
 
     # Forward the following calls to base, but with a check on the BASE_KEY.
     def merge_from_other_cfg(self, cfg_other):
+        print('merge from other cfg', cfg_other)
         """
         Args:
             cfg_other (CfgNode): configs to merge from.

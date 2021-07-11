@@ -4,6 +4,7 @@
 @contact: sherlockliao01@gmail.com
 """
 
+import torch
 import torchvision.transforms as T
 
 from .transforms import *
@@ -46,7 +47,7 @@ def build_transforms(cfg, is_train=True):
         cj_contrast = cfg.INPUT.CJ.CONTRAST
         cj_saturation = cfg.INPUT.CJ.SATURATION
         cj_hue = cfg.INPUT.CJ.HUE
-
+        print(cj_prob, cj_saturation)
         # random affine
         do_affine = cfg.INPUT.AFFINE.ENABLED
 
@@ -59,11 +60,17 @@ def build_transforms(cfg, is_train=True):
         do_rpt = cfg.INPUT.RPT.ENABLED
         rpt_prob = cfg.INPUT.RPT.PROB
 
+        do_gauss_noise = True  # cfg.INPUT.NOISE.ENABLED
+        gauss_noise_var = 4.8  # cfg.INPUT.NOISE.VAR
+
         if do_autoaug:
             res.append(T.RandomApply([AutoAugment()], p=autoaug_prob))
 
         if size_train[0] > 0:
             res.append(T.Resize(size_train[0] if len(size_train) == 1 else size_train, interpolation=3))
+
+        if do_affine:
+            res.append(T.RandomAffine(degrees=15, shear=15, resample=3))
 
         if do_crop:
             res.append(T.RandomResizedCrop(size=crop_size[0] if len(crop_size) == 1 else crop_size,
@@ -82,7 +89,31 @@ def build_transforms(cfg, is_train=True):
                                       fillcolor=0))
         if do_augmix:
             res.append(AugMix(prob=augmix_prob))
+
+        if True:
+            def get_compress(size_in, size_out):
+                return T.Compose([
+                    T.Resize((size_in, size_in), interpolation=3),
+                    T.Resize((size_out, size_out), interpolation=3),
+                ])
+
+            probs = torch.tensor([0.2, 0.8])
+            sizes = [get_compress( 84, 256),
+                     get_compress(128, 256),
+                     get_compress(64, 256)]
+
+            def compress(image, p=0.1):
+                if torch.rand(1) < p:
+                    return sizes[(probs < torch.rand(1)).sum()](image)
+                return image
+
+            res.append(compress)
+
         res.append(ToTensor())
+        if do_gauss_noise:
+            def gauss_noise(tensor):
+                return torch.clip(tensor + torch.normal(0, gauss_noise_var, size=tensor.shape), 0, 255)
+            res.append(T.Lambda(gauss_noise))
         if do_rea:
             res.append(T.RandomErasing(p=rea_prob, value=rea_value))
         if do_rpt:

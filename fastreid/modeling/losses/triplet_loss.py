@@ -78,7 +78,7 @@ def triplet_loss(embedding, targets, margin, norm_feat, hard_mining):
     Related Triplet Loss theory can be found in paper 'In Defense of the Triplet
     Loss for Person Re-Identification'."""
 
-    if norm_feat:
+    if norm_feat or True:
         dist_mat = cosine_dist(embedding, embedding)
     else:
         dist_mat = euclidean_dist(embedding, embedding)

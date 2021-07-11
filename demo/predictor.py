@@ -36,6 +36,7 @@ class FeatureExtractionDemo(object):
             self.predictor = AsyncPredictor(cfg, self.num_gpus)
         else:
             self.predictor = DefaultPredictor(cfg)
+        torch.save(self.predictor.model, 'model.h5')
 
     def run_on_image(self, original_image):
         """
